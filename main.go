@@ -6,7 +6,9 @@ import (
 	"log"
 	"time"
 
+	"github.com/imonasterio/go-mongodb-rabbitmq/cmd/api/consumer"
 	"github.com/imonasterio/go-mongodb-rabbitmq/cmd/api/mongodb"
+	"github.com/imonasterio/go-mongodb-rabbitmq/cmd/api/rabbitmq"
 	"github.com/imonasterio/go-mongodb-rabbitmq/cmd/api/server"
 
 	_ "github.com/joho/godotenv/autoload"
@@ -26,6 +28,14 @@ func main() {
 			log.Fatal(err)
 		}
 	}()
+
+	connectRabbitmq := rabbitmq.ConnectRabbit()
+
+	defer connectRabbitmq.Close()
+
+	ch := consumer.StartConsumer(connectRabbitmq)
+
+	defer ch.Close()
 
 	server.InitServer()
 }

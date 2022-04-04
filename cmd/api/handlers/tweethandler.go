@@ -8,6 +8,8 @@ import (
 
 	"github.com/imonasterio/go-mongodb-rabbitmq/cmd/api/models"
 	"github.com/imonasterio/go-mongodb-rabbitmq/cmd/api/mongodb"
+	"github.com/imonasterio/go-mongodb-rabbitmq/cmd/api/producer"
+	"github.com/imonasterio/go-mongodb-rabbitmq/cmd/api/rabbitmq"
 	"github.com/labstack/echo/v4"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -64,8 +66,11 @@ func InsertTwitterEndopoint(c echo.Context) error {
 	_, err := mongodb.Collection.InsertOne(ctx, tweet)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Sprintf("Error: %s", err.Error()))
-
 	}
+
+	go func() {
+		producer.StartProducer(rabbitmq.ConnectRabbit(), tweet)
+	}()
 
 	return c.JSON(http.StatusOK, "Succesfully")
 }
